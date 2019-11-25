@@ -1,83 +1,65 @@
 import random
 import time
-
 import requests
 from openpyxl import Workbook
 import pymysql.cursors
-
+import json
 
 def get_conn():
     '''建立数据库连接'''
-    conn = pymysql.connect(host='localhost',
-                                user='root',
-                                password='root',
-                                db='python',
-                                charset='utf8mb4',
-                                cursorclass=pymysql.cursors.DictCursor)
+    conn = pymysql.connect(host='localhost',user='root',password='root',db='python',charset='utf8mb4',cursorclass=pymysql.cursors.DictCursor)
     return conn
-
 
 def insert(conn, info):
     '''数据写入数据库'''
     with conn.cursor() as cursor:
-        sql = "INSERT INTO `python` (`shortname`, `fullname`, `industryfield`, `companySize`, `salary`, `city`, `education`) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        sql = "INSERT INTO `company` (`shortname`, `fullname`, `industryfield`, `financeStage`,`companySize`,`positionName`, `salary`,`skillLables`,`city`, `education`,`time`) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         cursor.execute(sql, info)
-    conn.commit()
-
-
-def get_json(url, page, lang_name):
-    '''返回当前页面的信息列表'''
-    headers = {
-        'Host': 'www.lagou.com',
-        'Connection': 'keep-alive',
-        'Content-Length': '23',
-        'Origin': 'https://www.lagou.com',
-        'X-Anit-Forge-Code': '0',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:61.0) Gecko/20100101 Firefox/61.0',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Accept': 'application/json, text/javascript, */*; q=0.01',
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-Anit-Forge-Token': 'None',
-        'Referer': 'https://www.lagou.com/jobs/list_python?city=%E5%85%A8%E5%9B%BD&cl=false&fromSearch=true&labelWords=&suginput=',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7'
-    }
-    data = {'first': 'false', 'pn': page, 'kd': lang_name}
-    json = requests.post(url, data, headers=headers).json()
-    list_con = json['content']['positionResult']['result']
-    info_list = []
-    for i in list_con:
-        info = []
-        info.append(i.get('companyShortName', '无'))
-        info.append(i.get('companyFullName', '无'))
-        info.append(i.get('industryField', '无'))
-        info.append(i.get('companySize', '无'))
-        info.append(i.get('salary', '无'))
-        info.append(i.get('city', '无'))
-        info.append(i.get('education', '无'))
-        info_list.append(info)
-    return info_list
-
+        conn.commit()
 
 def main():
-    lang_name = 'python'
-    wb = Workbook()  # 打开 excel 工作簿
-    conn = get_conn()  # 建立数据库连接  不存数据库 注释此行
-    for i in ['北京', '上海', '广州', '深圳', '杭州']:   # 五个城市
-        page = 1
-        ws1 = wb.active
-        ws1.title = lang_name
-        url = 'https://www.lagou.com/jobs/positionAjax.json?city={}&needAddtionalResult=false'.format(i)
-        while page < 31:   # 每个城市30页信息
-            info = get_json(url, page, lang_name)
-            page += 1
-            print(i, 'page', page)
-            time.sleep(random.randint(10, 20))
-            for row in info:
-                insert(conn, tuple(row))  # 插入数据库，若不想存入 注释此行
-                ws1.append(row)
-    conn.close()  # 关闭数据库连接，不存数据库 注释此行
-    wb.save('{}职位信息.xlsx'.format(lang_name))
+    url_start = "https://www.lagou.com/jobs/list_运维?city=%E6%88%90%E9%83%BD&cl=false&fromSearch=true&labelWords=&suginput="
+    url_parse = "https://www.lagou.com/jobs/positionAjax.json?city=成都&needAddtionalResult=false"
+    headers = {
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Referer': 'https://www.lagou.com/jobs/list_%E8%BF%90%E7%BB%B4?city=%E6%88%90%E9%83%BD&cl=false&fromSearch=true&labelWords=&suginput=',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36'
+    }
+    for x in range(1, 5):
+
+        s = requests.Session()
+        s.get(url_start, headers=headers, timeout=3)  # 请求首页获取cookies
+        cookie = s.cookies  # 为此次获取的cookies
+        #第二次请求 获取数据
+        data = {
+            'first': 'true',
+            'pn': str(x),
+            'kd': '运维'
+        }
+        response = s.post(url_parse, data=data, headers=headers, cookies=cookie, timeout=3)  # 获取此次文本
+        time.sleep(5)
+        response.encoding = response.apparent_encoding
+        text = json.loads(response.text)
+        info = text["content"]["positionResult"]["result"]
+        wb = Workbook()  # 打开 excel 工作簿
+        conn = get_conn()
+        for i in info:
+            row = [
+                i["companyShortName"],#公司简称
+                i["companyFullName"],#公司全称
+                i["industryField"],#行业
+                i["financeStage"],#融资信息
+                i["companySize"],#公司规模
+                i["positionName"],  # 职位
+                i["salary"],#薪资
+                i["skillLables"],#标签
+                i["city"]+i["district"]+i["stationname"],#地区
+                i["education"],
+                i["createTime"],
+            ]
+            print(row)
+            insert(conn,tuple(row)) #插入数据库
+            wb.save('{}职位信息.xlsx'.format('python'))
 
 if __name__ == '__main__':
     main()

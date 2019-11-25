@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-
+#糗事百科
 def download_page(url):
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:61.0) Gecko/20100101 Firefox/61.0"}
     r = requests.get(url, headers=headers)
@@ -32,7 +32,7 @@ def get_content(html, page):
         else:  # 匿名用户
             gender = ''
             age = ''
-
+            #保存文件
         save_txt(output.format(page, author, gender, age, vote, comment, content))
 
 
@@ -40,7 +40,6 @@ def save_txt(*args):
     for i in args:
         with open('qiubai.txt', 'a', encoding='utf-8') as f:
             f.write(i)
-
 
 def main():
     # 我们点击下面链接，在页面下方可以看到共有13页，可以构造如下 url，

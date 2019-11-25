@@ -29,8 +29,8 @@ while True:
             }
         }
     ]
-    client = InfluxDBClient('localhost', 8086, 'root', 'root', 'xxyyxx')
-    client.create_database('xxyyxx',if_not_exists=False)
+    client = InfluxDBClient('localhost', 8086, 'root', 'root', 'python')
+    client.create_database('python',if_not_exists=False)
     client.write_points(json_body)
     #result = client.query('select value from cpu_load_short;')
     #print("Result: {0}".format(result))

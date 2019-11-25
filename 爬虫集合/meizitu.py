@@ -3,7 +3,7 @@ import os
 import time
 import threading
 from bs4 import BeautifulSoup
-
+#妹子图网站图片爬取
 
 def download_page(url):
     '''
@@ -65,13 +65,12 @@ def main():
                 threads.remove(thread)
         while len(threads) < 5 and len(queue) > 0:   # 最大线程数设置为 5
             cur_page = queue.pop(0)
-            url = 'http://meizitu.com/a/more_{}.html'.format(cur_page)
+            url = 'https://www.meizitu.com/a/more_{}.html'.format(cur_page)
             thread = threading.Thread(target=execute, args=(url,))
             thread.setDaemon(True)
             thread.start()
             print('{}正在下载{}页'.format(threading.current_thread().name, cur_page))
             threads.append(thread)
-
 
 if __name__ == '__main__':
     main()

@@ -1,7 +1,7 @@
 # -*- coding:UTF-8 -*-
 
-import  requests , time
-import  hmac ,json
+import  requests,time
+import  hmac,json
 from bs4 import BeautifulSoup
 from hashlib import sha1
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     sessiona = requests.Session()
     headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0','authorization':'oauth c3cef7c66a1843f8b3a9e6a1e3160e20'}
 
-    login('12345678@qq.com','12345678',get_captcha,sessiona,headers) # 用户名密码换自己的就好了
+    login('13001904620','13001904620',get_captcha,sessiona,headers) # 用户名密码换自己的就好了
     resp = sessiona.get('https://www.zhihu.com/inbox',headers=headers)  # 登录进去了，可以看私信了
     print(BeautifulSoup(resp.content ,'html.parser'))
     
